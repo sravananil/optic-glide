@@ -1,0 +1,650 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Mic, Settings, X, Pen, Power, ZoomIn } from 'lucide-react';
+
+// Node type definition
+interface ContentNode {
+  id: string;
+  concept: string;
+  mediaUrl: string;
+  contentType: 'image' | 'video' | 'text' | 'document';
+  parts: string[];
+  timestamp: Date;
+  position?: { x: number; y: number };
+  isActive: boolean;
+}
+
+interface TranscriptMessage {
+  type: 'user' | 'ai';
+  text: string;
+  timestamp: Date;
+}
+
+export default function RoomInterface() {
+  const [isConnected, setIsConnected] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [nodes, setNodes] = useState<ContentNode[]>([]);
+  const [activeNode, setActiveNode] = useState<ContentNode | null>(null);
+  const [transcript, setTranscript] = useState<TranscriptMessage[]>([]);
+  const [aiStatus, setAiStatus] = useState<'idle' | 'listening' | 'processing'>('idle');
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [featuresExpanded, setFeaturesExpanded] = useState(false);
+  const [isDrawingMode, setIsDrawingMode] = useState(false);
+  const [aiPaused, setAiPaused] = useState(false);
+  
+  const websocketRef = useRef<WebSocket | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const transcriptEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll transcript
+  useEffect(() => {
+    transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [transcript]);
+
+  // WebSocket Connection
+  useEffect(() => {
+    const ws = new WebSocket('ws://localhost:8000/ws');
+    
+    ws.onopen = () => {
+      console.log('✅ WebSocket Connected');
+      setIsConnected(true);
+      ws.send(JSON.stringify({ type: 'ping' }));
+    };
+    
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log('📦 Received:', data);
+      
+      if (data.type === 'visualization') {
+        handleNewConcept(data);
+      }
+    };
+    
+    ws.onerror = (error) => {
+      console.error('❌ WebSocket Error:', error);
+      setIsConnected(false);
+    };
+    
+    ws.onclose = () => {
+      console.log('🔌 WebSocket Closed');
+      setIsConnected(false);
+    };
+    
+    websocketRef.current = ws;
+    
+    return () => ws.close();
+  }, []);
+
+  // Handle new concept from AI
+  const handleNewConcept = (data: any) => {
+    setAiStatus('processing');
+    
+    // Add AI response to transcript
+    setTranscript(prev => [...prev, {
+      type: 'ai',
+      text: `OK! The user is explaining ${data.concept} so I need to present ${data.concept} along with specifying part names.`,
+      timestamp: new Date()
+    }]);
+    
+    setTimeout(() => {
+      // If there's an active node, convert it to a regular node
+      if (activeNode) {
+        const previousNode = {
+          ...activeNode,
+          isActive: false,
+          position: calculateNodePosition(nodes.length)
+        };
+        setNodes(prev => [...prev, previousNode]);
+      }
+      
+      // Create new active node
+      const newActiveNode: ContentNode = {
+        id: Date.now().toString(),
+        concept: data.concept,
+        mediaUrl: data.media_url,
+        contentType: determineContentType(data),
+        parts: data.parts || [],
+        timestamp: new Date(),
+        isActive: true
+      };
+      
+      setActiveNode(newActiveNode);
+      setAiStatus('idle');
+    }, 800);
+  };
+
+  // Calculate node position in network pattern
+  const calculateNodePosition = (index: number) => {
+    const radius = 30;
+    const angle = (index * 360) / Math.max(nodes.length + 1, 8);
+    const x = 50 + radius * Math.cos((angle * Math.PI) / 180);
+    const y = 50 + radius * Math.sin((angle * Math.PI) / 180);
+    return { x, y };
+  };
+
+  // Determine content type
+  const determineContentType = (data: any): 'image' | 'video' | 'text' | 'document' => {
+    const url = data.media_url?.toLowerCase() || '';
+    if (url.includes('.mp4') || url.includes('youtube') || url.includes('video')) return 'video';
+    if (url.includes('.pdf') || url.includes('.doc')) return 'document';
+    if (url.includes('.jpg') || url.includes('.png') || url.includes('image')) return 'image';
+    return 'text';
+  };
+
+  // Get color based on content type
+  const getNodeColor = (type: string) => {
+    const colors = {
+      image: '#00FFFF',
+      video: '#BF00FF',
+      text: '#00FF00',
+      document: '#FF8C00'
+    };
+    return colors[type as keyof typeof colors] || '#00FFFF';
+  };
+
+  // Handle microphone
+  const handleMicClick = async () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      
+      const chunks: Blob[] = [];
+      
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+      
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+        
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = () => {
+          const base64Audio = reader.result?.toString().split(',')[1];
+          
+          if (websocketRef.current?.readyState === WebSocket.OPEN) {
+            websocketRef.current.send(JSON.stringify({
+              type: 'audio',
+              audio: base64Audio,
+              timestamp: new Date().toISOString()
+            }));
+          }
+        };
+      };
+      
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+      setAiStatus('listening');
+      
+    } catch (error) {
+      console.error('❌ Microphone error:', error);
+      alert('Please allow microphone access');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      setIsRecording(false);
+      
+      // Add user message to transcript
+      setTranscript(prev => [...prev, {
+        type: 'user',
+        text: 'As we can see human brain image here along with parts',
+        timestamp: new Date()
+      }]);
+      
+      setAiStatus('processing');
+    }
+  };
+
+  // Handle node click
+  const handleNodeClick = (node: ContentNode) => {
+    if (activeNode) {
+      const previousNode = {
+        ...activeNode,
+        isActive: false,
+        position: calculateNodePosition(nodes.length)
+      };
+      setNodes(prev => [...prev.filter(n => n.id !== node.id), previousNode]);
+    }
+    
+    setActiveNode({ ...node, isActive: true });
+    setNodes(prev => prev.filter(n => n.id !== node.id));
+  };
+
+  // Handle features
+  const handleRestAI = () => {
+    setAiPaused(!aiPaused);
+    if (isRecording) {
+      stopRecording();
+    }
+    if (websocketRef.current?.readyState === WebSocket.OPEN) {
+      websocketRef.current.send(JSON.stringify({
+        type: 'pause',
+        paused: !aiPaused
+      }));
+    }
+  };
+
+  const handleSmartZoom = () => {
+    if (activeNode) {
+      // Zoom logic - scroll to active node
+      console.log('Zooming to active node:', activeNode.concept);
+    }
+  };
+
+  const handleExitRoom = () => {
+    if (websocketRef.current) {
+      websocketRef.current.close();
+    }
+    // Navigate back or close room
+    window.history.back();
+  };
+
+  return (
+    <div 
+      className="relative w-full h-screen overflow-hidden transition-colors duration-500"
+      style={{
+        background: isDarkMode 
+          ? '#0a0a0a' 
+          : 'linear-gradient(to bottom right, #f9fafb, #dbeafe, #f3e8ff)'
+      }}
+    >
+      
+      {/* Subtle Space Background Effect */}
+      <div className="absolute inset-0 opacity-30">
+        {isDarkMode ? (
+          <>
+            <div className="absolute top-20 left-1/4 w-96 h-96 bg-purple-900/20 rounded-full blur-[150px]" />
+            <div className="absolute bottom-20 right-1/4 w-80 h-80 bg-cyan-900/15 rounded-full blur-[120px]" />
+          </>
+        ) : (
+          <>
+            <div className="absolute top-20 left-1/4 w-96 h-96 bg-blue-400/20 rounded-full blur-[150px]" />
+            <div className="absolute bottom-20 right-1/4 w-80 h-80 bg-purple-400/20 rounded-full blur-[120px]" />
+          </>
+        )}
+      </div>
+      
+      {/* Top Header Bar */}
+      <header className="relative z-50 flex items-center justify-between px-6 py-4">
+        {/* Left Side - Logo & Room Name */}
+        <div className="flex items-center gap-3">
+          <img src="/assets/logo.png" alt="OG" className="h-10" />
+          <span className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>OpticGlide</span>
+          <span className={`px-3 py-1 rounded text-sm border ${
+            isDarkMode 
+              ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' 
+              : 'bg-blue-100 text-blue-700 border-blue-300'
+          }`}>
+            [Room Name: Mastered Doctor]
+          </span>
+        </div>
+        
+        {/* Right Side - Status & Controls */}
+        <div className="flex items-center gap-3">
+          {/* Dark/Light Mode Toggle */}
+          <motion.button
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className={`p-2 rounded border transition-colors ${
+              isDarkMode 
+                ? 'bg-white/5 hover:bg-white/10 border-white/10' 
+                : 'bg-gray-200 hover:bg-gray-300 border-gray-300'
+            }`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {isDarkMode ? (
+              <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            )}
+          </motion.button>
+
+          {/* Connection Status */}
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded border ${
+            isDarkMode 
+              ? 'bg-white/5 border-white/10' 
+              : 'bg-white border-gray-300'
+          }`}>
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+            <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+              {isConnected ? 'Connected' : 'Disconnected'}
+            </span>
+          </div>
+
+          {/* Exit Room Button */}
+          <button 
+            onClick={handleExitRoom}
+            className="px-4 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded text-sm border border-red-500/30 transition-colors"
+          >
+            Exit Room
+          </button>
+          
+          <motion.button 
+            className={`p-2 rounded border transition-colors ${
+              isDarkMode 
+                ? 'bg-white/5 hover:bg-white/10 border-white/10' 
+                : 'bg-gray-200 hover:bg-gray-300 border-gray-300'
+            }`}
+            whileHover={{ rotate: 90 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Settings className={`w-5 h-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-700'}`} />
+          </motion.button>
+        </div>
+      </header>
+      
+      {/* Main Workspace Canvas */}
+      <div className="relative w-full h-[calc(100vh-120px)]">
+        
+        {/* Active Concept Display */}
+        <AnimatePresence>
+          {activeNode && (
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+            >
+              {/* Title Banner */}
+              <div className="absolute -top-12 left-0 right-0 text-center">
+                <h2 className={`text-2xl font-bold uppercase tracking-widest ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  {activeNode.concept}
+                </h2>
+              </div>
+              
+              {/* Main Image */}
+              <div className="relative">
+                <img
+                  src={activeNode.mediaUrl}
+                  alt={activeNode.concept}
+                  className={`w-[500px] h-[350px] object-cover rounded-lg border-2 ${
+                    isDarkMode ? 'border-white/20' : 'border-gray-300'
+                  }`}
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://via.placeholder.com/500x350/1a1a1a/00FFFF?text=Image+Not+Available';
+                  }}
+                />
+                
+                {/* Parts Labels */}
+                {activeNode.parts.length > 0 && (
+                  <div className="absolute -left-32 top-1/2 -translate-y-1/2 space-y-2">
+                    {activeNode.parts.slice(0, 2).map((part, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <div className={`w-20 h-0.5 ${isDarkMode ? 'bg-white/30' : 'bg-gray-400'}`} />
+                        <span className={`text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{part}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
+        {/* Previous Concept Nodes */}
+        {nodes.map((node, index) => (
+          <React.Fragment key={node.id}>
+            {/* Connection Line */}
+            <svg className="absolute inset-0 pointer-events-none">
+              <line
+                x1="50%"
+                y1="50%"
+                x2={`${node.position?.x}%`}
+                y2={`${node.position?.y}%`}
+                stroke={getNodeColor(node.contentType)}
+                strokeWidth="1.5"
+                strokeOpacity="0.4"
+              />
+            </svg>
+            
+            {/* Node Ball */}
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute cursor-pointer"
+              style={{
+                left: `${node.position?.x}%`,
+                top: `${node.position?.y}%`,
+                transform: 'translate(-50%, -50%)'
+              }}
+              onClick={() => handleNodeClick(node)}
+              whileHover={{ scale: 1.2 }}
+            >
+              <div 
+                className="w-16 h-16 rounded-full flex items-center justify-center border-2"
+                style={{ 
+                  backgroundColor: isDarkMode ? `${getNodeColor(node.contentType)}15` : `${getNodeColor(node.contentType)}30`,
+                  borderColor: getNodeColor(node.contentType)
+                }}
+              >
+                <span className={`text-[10px] font-bold text-center px-1 ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  {node.concept.split(' ').slice(0, 2).join(' ')}
+                </span>
+              </div>
+            </motion.div>
+          </React.Fragment>
+        ))}
+        
+        {/* Empty State */}
+        {!activeNode && nodes.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <p className={`text-xl ${isDarkMode ? 'text-gray-500' : 'text-gray-600'}`}>
+                {isRecording ? '🎤 Listening...' : 'Click the mic to start'}
+              </p>
+              <p className={`text-sm mt-2 ${isDarkMode ? 'text-gray-600' : 'text-gray-500'}`}>
+                Try saying: "Show me the human brain"
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Bottom Control Bar */}
+      <div className="absolute bottom-0 left-0 right-0 h-20 flex items-center justify-center">
+        
+        {/* Features Button [F^] - Bottom Left */}
+        <div className="absolute left-6 bottom-6">
+          {/* Main F^ Button */}
+          <motion.button
+            onClick={() => setFeaturesExpanded(!featuresExpanded)}
+            className={`relative w-14 h-14 rounded-full flex items-center justify-center transition-all backdrop-blur-md ${
+              isDarkMode
+                ? 'bg-cyan-500/20 border-2 border-cyan-500/50 shadow-[0_0_30px_rgba(0,255,255,0.4)]'
+                : 'bg-cyan-100 border-2 border-cyan-400 shadow-[0_0_20px_rgba(0,200,255,0.3)]'
+            } ${featuresExpanded ? 'shadow-[0_0_50px_rgba(0,255,255,0.8)]' : ''}`}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <span className={`font-bold text-lg ${isDarkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>
+              F<sup className="text-xs">^</sup>
+            </span>
+          </motion.button>
+
+          {/* Expanded Features Menu */}
+          <AnimatePresence>
+            {featuresExpanded && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                className="absolute bottom-16 left-0 flex flex-col gap-2"
+              >
+                {/* Interactive Draw */}
+                <motion.button
+                  onClick={() => setIsDrawingMode(!isDrawingMode)}
+                  className={`w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md transition-all ${
+                    isDrawingMode
+                      ? 'bg-cyan-500 shadow-[0_0_20px_rgba(0,255,255,0.6)]'
+                      : isDarkMode
+                      ? 'bg-white/10 border border-white/20 hover:bg-white/20'
+                      : 'bg-white border border-gray-300 hover:bg-gray-100'
+                  }`}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Interactive Draw"
+                >
+                  <Pen className={`w-5 h-5 ${
+                    isDrawingMode ? 'text-black' : isDarkMode ? 'text-cyan-400' : 'text-cyan-700'
+                  }`} />
+                </motion.button>
+
+                {/* Rest AI */}
+                <motion.button
+                  onClick={handleRestAI}
+                  className={`w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md transition-all ${
+                    aiPaused
+                      ? 'bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.6)]'
+                      : isDarkMode
+                      ? 'bg-white/10 border border-white/20 hover:bg-white/20'
+                      : 'bg-white border border-gray-300 hover:bg-gray-100'
+                  }`}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  title={aiPaused ? 'Resume AI' : 'Pause AI'}
+                >
+                  <Power className={`w-5 h-5 ${
+                    aiPaused ? 'text-white' : isDarkMode ? 'text-gray-400' : 'text-gray-700'
+                  }`} />
+                </motion.button>
+
+                {/* Smart Zoom */}
+                <motion.button
+                  onClick={handleSmartZoom}
+                  className={`w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md transition-all ${
+                    isDarkMode
+                      ? 'bg-white/10 border border-white/20 hover:bg-white/20'
+                      : 'bg-white border border-gray-300 hover:bg-gray-100'
+                  }`}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Smart Zoom to Active Node"
+                >
+                  <ZoomIn className={`w-5 h-5 ${isDarkMode ? 'text-purple-400' : 'text-purple-700'}`} />
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+        
+        {/* Mic Button - Center */}
+        <motion.button
+          onClick={handleMicClick}
+          className="relative"
+          whileTap={{ scale: 0.95 }}
+        >
+          <div 
+            className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 ${
+              isRecording 
+                ? 'bg-red-500/80 shadow-[0_0_40px_rgba(239,68,68,0.6)]' 
+                : 'bg-gradient-to-br from-cyan-500/80 to-green-500/80 shadow-[0_0_40px_rgba(0,255,255,0.4)]'
+            }`}
+          >
+            <Mic className="w-8 h-8 text-white" />
+          </div>
+          
+          {isRecording && (
+            <>
+              <motion.div
+                className="absolute inset-0 rounded-full border-3 border-red-500/50"
+                animate={{ scale: [1, 1.4], opacity: [0.6, 0] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+              />
+              <motion.div
+                className="absolute inset-0 rounded-full border-3 border-red-500/50"
+                animate={{ scale: [1, 1.4], opacity: [0.6, 0] }}
+                transition={{ repeat: Infinity, duration: 1.5, delay: 0.5 }}
+              />
+            </>
+          )}
+        </motion.button>
+      </div>
+      
+      {/* Live Transcript Box - Bottom Right */}
+      <div className={`absolute bottom-6 right-6 w-80 backdrop-blur-md border rounded-lg overflow-hidden z-50 ${
+        isDarkMode 
+          ? 'bg-black/40 border-white/10' 
+          : 'bg-white/80 border-gray-300'
+      }`}>
+        {/* Header */}
+        <div className={`flex items-center justify-between px-3 py-2 border-b ${
+          isDarkMode 
+            ? 'bg-white/5 border-white/10' 
+            : 'bg-gray-100 border-gray-300'
+        }`}>
+          <span className={`text-xs font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            LIVE TRANSCRIPT
+          </span>
+          <div className="flex items-center gap-2">
+            {/* Status Indicator */}
+            <div className="flex items-center gap-1.5">
+              <div className={`w-1.5 h-1.5 rounded-full ${
+                aiStatus === 'listening' ? 'bg-green-500 animate-pulse' :
+                aiStatus === 'processing' ? 'bg-yellow-500 animate-pulse' :
+                'bg-gray-500'
+              }`} />
+              <span className={`text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                {aiStatus === 'listening' ? 'Listening' :
+                 aiStatus === 'processing' ? 'Processing' :
+                 'Idle'}
+              </span>
+            </div>
+            
+            {/* Small Mic Icon */}
+            <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+              isRecording ? 'bg-green-500/20' : 'bg-gray-500/20'
+            }`}>
+              <Mic className={`w-3 h-3 ${isRecording ? 'text-green-400' : 'text-gray-500'}`} />
+            </div>
+          </div>
+        </div>
+        
+        {/* Transcript Messages */}
+        <div className="h-48 overflow-y-auto p-3 space-y-2 text-xs">
+          {transcript.length === 0 ? (
+            <p className={`text-center py-8 ${isDarkMode ? 'text-gray-500' : 'text-gray-600'}`}>
+              No conversation yet...
+            </p>
+          ) : (
+            transcript.map((msg, i) => (
+              <div key={i} className="space-y-1">
+                <div className={`font-semibold ${
+                  msg.type === 'user' ? 'text-cyan-400' : 'text-purple-400'
+                }`}>
+                  {msg.type === 'user' ? 'USER:' : 'AI:'}
+                </div>
+                <div className={`leading-relaxed pl-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {msg.text}
+                </div>
+              </div>
+            ))
+          )}
+          <div ref={transcriptEndRef} />
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,97 @@
+{
+  "human brain": {
+    "concept": "Human Brain",
+    "image_url": "/images/doctor/anatomy/brain.jpg",
+    "description": "The brain is the central organ of the nervous system, containing approximately 86 billion neurons that control all body functions.",
+    "key_facts": [
+      "Contains approximately 86 billion neurons",
+      "Consumes about 20% of the body's total energy and oxygen",
+      "Consists of about 75% water",
+      "Information travels at speeds of up to 268 miles per hour"
+    ],
+    "full_text": "The human brain is the central organ of the human nervous system. It is the largest brain of all vertebrates relative to body size and is the most complex brain.",
+    "source_url": "https://en.wikipedia.org/wiki/Human_Brain",
+    "content_weight": "medium",
+    "source": "local_image"
+  },
+  "human heart": {
+    "concept": "Human Heart",
+    "image_url": "/images/doctor/anatomy/brain.jpg",
+    "description": "The heart is a muscular organ that pumps blood throughout the circulatory system, beating about 100,000 times per day.",
+    "key_facts": [
+      "Beats approximately 100,000 times per day",
+      "Pumps about 2,000 gallons of blood daily",
+      "Has four chambers: two atria and two ventricles",
+      "About the size of a closed fist"
+    ],
+    "full_text": "The heart is a muscular organ in most animals. This organ pumps blood through the blood vessels of the circulatory system.",
+    "source_url": "https://en.wikipedia.org/wiki/Human_Heart",
+    "content_weight": "medium",
+    "source": "local_image"
+  },
+  "nervous system": {
+    "concept": "Nervous System",
+    "image_url": "/images/doctor/anatomy/brain.jpg",
+    "description": "The nervous system is a network of nerve cells that transmit signals throughout the body, divided into central and peripheral systems.",
+    "key_facts": [
+      "Divided into central and peripheral nervous systems",
+      "Transmits signals at speeds up to 120 meters per second",
+      "Contains both sensory and motor neurons",
+      "Coordinates all body functions and responses"
+    ],
+    "full_text": "The nervous system is the part of an animal's body that coordinates its actions by transmitting signals to and from different parts of its body.",
+    "source_url": "https://en.wikipedia.org/wiki/Nervous_System",
+    "content_weight": "medium",
+    "source": "local_image"
+  },
+  "skeleton": {
+    "concept": "Human Skeleton",
+    "image_url": "/images/doctor/anatomy/human flesh skeleton.jpg",
+    "description": "The skeleton is the framework of bones that supports the body and protects organs, consisting of 206 bones in adults.",
+    "key_facts": [
+      "Adults have 206 bones",
+      "Makes up about 15% of total body weight",
+      "Produces red and white blood cells",
+      "Provides attachment points for muscles"
+    ],
+    "full_text": "The skeleton is the structural basis that supports the human body. It is a living tissue that constantly breaks down and regenerates.",
+    "source_url": "https://en.wikipedia.org/wiki/Human_skeleton",
+    "content_weight": "medium",
+    "source": "local_image"
+  },
+  "skull": {
+    "concept": "Human Skull",
+    "image_url": "/images/doctor/anatomy/human flesh skeleton.jpg",
+    "description": "The skull is the bone structure of the head that protects the brain and supports facial features, containing 22 bones.",
+    "key_facts": [
+      "Contains 22 bones",
+      "Protects the brain from injury",
+      "Supports and shapes the face",
+      "Contains cavities for the eyes, nose, and ears"
+    ],
+    "full_text": "The skull is a bone structure in the head that forms the framework for the face and protects the brain.",
+    "source_url": "https://en.wikipedia.org/wiki/Skull",
+    "content_weight": "medium",
+    "source": "local_image"
+  },
+  "explanation": {
+    "description": "\"The Explanation offers clear, concise breakdowns of complex concepts, making learning accessible and engaging.\"",
+    "concept": "Explanation",
+    "image_url": ""
+  },
+  "neuron": {
+    "description": "The Neuron is a specialized cell that processes and transmits information within the nervous system via electrical and chemical signals.",
+    "concept": "Neuron",
+    "image_url": "http://localhost:8001/images/doctor/anatomy/Human skull.jpg"
+  },
+  "definition of meaning": {
+    "description": "\"The Definition of Meaning explores how words and symbols convey meaning within languages.\"",
+    "concept": "Definition of Meaning",
+    "image_url": ""
+  },
+  "cat": {
+    "description": "The Cat is a carnivorous mammal known for its agility and independent nature. It has retractable claws, sharp teeth, and a keen sense of sight and hearing. Domestic cats are popular pets worldwide.",
+    "concept": "Cat",
+    "image_url": ""
+  }
+}

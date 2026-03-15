@@ -1,0 +1,39 @@
+
+{
+    "human brain": {
+        "concept": "Human Brain",
+        "image_url": "https://example.com/human_brain.jpg",
+        "description": "The central organ of the human nervous system, responsible for processing sensory information and coordinating body functions.",
+        "key_facts": [
+            "Contains approximately 86 billion neurons.",
+            "Consumes about 20% of the body's total energy and oxygen.",
+            "Consists of about 75% water.",
+            "Information travels at speeds of up to 268 miles per hour."
+        ],
+        "full_text": "The human brain is the command center for the nervous system. It receives signals from the body's sensory organs and outputs information to the muscles. The brain is divided into three main parts: the cerebrum, cerebellum, and brainstem. The cerebrum is the largest part and is split into two hemispheres, each containing four lobes: the Frontal (logic and movement), Parietal (sensory info), Temporal (auditory and memory), and Occipital (visual). The cerebellum coordinates precision and timing of movements, while the brainstem controls vital life functions like breathing and heart rate. Deep within the brain lie the limbic system (emotions) and the thalamus (relay station). Neuroplasticity allows the brain to reorganize itself by forming new neural connections throughout life."
+    },
+    "nervous system": {
+        "concept": "Nervous System",
+        "image_url": "https://example.com/nervous_system.jpg",
+        "description": "A complex network of nerves and cells that carry messages to and from the brain and spinal cord to various parts of the body.",
+        "key_facts": [
+            "Divided into the Central Nervous System (CNS) and Peripheral Nervous System (PNS).",
+            "Neurons are the basic units of communication.",
+            "The sciatic nerve is the longest nerve in the human body.",
+            "The Autonomic Nervous System works involuntarily (e.g., heartbeat)."
+        ],
+        "full_text": "The nervous system is the body's primary communication system. The CNS consists of the brain and spinal cord, acting as the integration center. The PNS includes all the nerves that branch out from the CNS to the rest of the body, subdivided into the Somatic (voluntary) and Autonomic (involuntary) systems. Signals are transmitted via electrical impulses and chemical neurotransmitters across synapses. Sensory neurons carry info toward the CNS, while motor neurons carry instructions away from it. The system also includes the Enteric nervous system, often called the 'second brain' in the gut. Protection is provided by the blood-brain barrier and the meninges."
+    },
+    "lungs": {
+        "concept": "Lungs",
+        "image_url": "https://example.com/lungs.jpg",
+        "description": "The primary organs of the respiratory system, facilitating the exchange of oxygen and carbon dioxide.",
+        "key_facts": [
+            "The right lung is slightly larger than the left to accommodate the heart.",
+            "Adult lungs contain about 300 to 500 million alveoli.",
+            "If spread flat, the surface area of the lungs would cover a tennis court.",
+            "Lungs are the only organs in the human body that can float on water."
+        ],
+        "full_text": "The lungs are sponge-like, air-filled organs located on either side of the chest (thorax). Their primary function is gas exchange: bringing oxygen into the blood and removing carbon dioxide. Air enters through the trachea, which branches into two bronchi. These further divide into smaller bronchioles, eventually ending in microscopic air sacs called alveoli. The alveoli are surrounded by capillaries where diffusion occurs. Breathing is powered by the diaphragm, a dome-shaped muscle below the lungs. When it contracts, it creates a vacuum that pulls air in. The lungs are protected by the rib cage and encased in a thin membrane called the pleura, which allows for frictionless expansion and contraction."
+    }
+}

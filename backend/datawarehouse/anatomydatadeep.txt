@@ -1,0 +1,41 @@
+{
+    "human brain": {
+        "concept": "Human Brain",
+        "image_url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/01_Lobes_of_the_human_brain.png",
+        "description": "The command center of the human nervous system, a complex biological organ responsible for cognition, emotion, and life-sustaining functions.",
+        "key_facts": [
+            "Contains roughly 86 billion neurons and an equal number of glial cells.",
+            "Consumes 20% of the body's total oxygen and glucose despite being only 2% of body weight.",
+            "Information travels at speeds up to 430 km/h (268 mph).",
+            "The brain lacks pain receptors; the organ itself cannot feel pain.",
+            "The wrinkly surface (cerebral cortex) increases surface area for more neurons."
+        ],
+        "full_text": "The human brain is divided into several specialized regions. The Cerebrum, the largest part, is split into two hemispheres connected by the corpus callosum. It manages higher functions like thought and action. The Frontal Lobe is the seat of executive function, personality, and motor control. The Parietal Lobe processes sensory information like touch and spatial orientation. The Temporal Lobe handles auditory processing and memory (including the Hippocampus), while the Occipital Lobe is dedicated to vision. Below the cerebrum sits the Cerebellum, often called the 'little brain,' which is vital for motor control, balance, and precision. The Brainstem (midbrain, pons, medulla oblongata) connects the brain to the spinal cord and regulates autonomic functions like breathing, heart rate, and sleep cycles. Deep structures like the Thalamus act as relay stations, and the Hypothalamus maintains homeostasis by controlling the endocrine system via the Pituitary Gland."
+    },
+    "nervous system": {
+        "concept": "Nervous System",
+        "image_url": "https://upload.wikimedia.org/wikipedia/commons/b/ba/Nervous_system_diagram.png",
+        "description": "An intricate network of nerves and specialized cells (neurons) that transmit signals between different parts of the body.",
+        "key_facts": [
+            "The Central Nervous System (CNS) consists of the brain and spinal cord.",
+            "The Peripheral Nervous System (PNS) connects the CNS to limbs and organs.",
+            "Electrical signals are called action potentials.",
+            "Neurotransmitters like dopamine and serotonin bridge the gaps (synapses) between neurons.",
+            "The sciatic nerve is the longest and widest single nerve in the body."
+        ],
+        "full_text": "The nervous system is the body's wiring. The CNS serves as the main processing hub. The PNS is further divided into the Somatic Nervous System, which controls voluntary movements via skeletal muscles, and the Autonomic Nervous System, which manages involuntary functions. The Autonomic branch is split into the Sympathetic ('fight or flight') and Parasympathetic ('rest and digest') systems. At the cellular level, neurons consist of a cell body, dendrites (which receive signals), and an axon (which sends signals). Many axons are insulated by a Myelin Sheath, which speeds up signal transmission. Glial cells provide support and protection for neurons. When a signal reaches the end of an axon, it triggers the release of chemical neurotransmitters into the synapse, which then bind to receptors on the neighboring neuron, continuing the communication chain."
+    },
+    "lungs": {
+        "concept": "Lungs",
+        "image_url": "https://upload.wikimedia.org/wikipedia/commons/a/a1/Lungs_diagram_detailed.svg",
+        "description": "A pair of spongy, air-filled organs located on either side of the chest that facilitate the exchange of gases between the atmosphere and the blood.",
+        "key_facts": [
+            "The right lung has three lobes, while the left lung has two to make room for the heart.",
+            "The total surface area of both lungs is roughly 70 to 100 square meters.",
+            "A person breathes about 11,000 liters of air every day.",
+            "Alveoli are only one cell thick to allow for rapid gas exchange.",
+            "The lungs contain no muscles; they are moved by the diaphragm and intercostal muscles."
+        ],
+        "full_text": "Respiration begins as air is drawn through the nose or mouth, down the pharynx and larynx, and into the Trachea (windpipe). The trachea splits into the left and right Primary Bronchi, which enter the lungs and branch into secondary and tertiary bronchi, then into tiny Bronchioles. These end in clusters of Alveoli, microscopic air sacs where gas exchange occurs. Oxygen diffuses across the thin alveolar membrane into the blood-filled capillaries, while carbon dioxide diffuses from the blood into the alveoli to be exhaled. This process is driven by partial pressure gradients. The lungs are encased in a double-layered serous membrane called the Pleura. The pleural cavity contains fluid that reduces friction during breathing. The Diaphragm, a large sheet of muscle at the base of the chest, is the primary driver of inhalation. When it contracts and flattens, it increases the volume of the thoracic cavity, lowering the internal pressure and drawing air in (Boyle's Law)."
+    }
+}
